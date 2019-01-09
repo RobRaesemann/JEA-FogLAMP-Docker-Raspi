@@ -3,7 +3,6 @@ FROM schachr/raspbian-stretch
 # FogLAMP on Raspberry PI 
 # TODO: Find an official Raspian Stretch image or build from scratch
 
-
 # Install packages required for FogLAMP
 RUN apt-get update && apt-get install -y \
     apt-utils \
@@ -37,6 +36,7 @@ RUN apt-get update && apt-get install -y \
 RUN git clone https://github.com/foglamp/FogLAMP.git /foglamp
 
 WORKDIR /foglamp
+RUN git checkout 1.4.2
 RUN make
 RUN make install
 
@@ -44,7 +44,12 @@ RUN mkdir -p /usr/local/foglamp/python/foglamp/plugins/north/http_north
 COPY http_north /usr/local/foglamp/python/foglamp/plugins/north/http_north
 
 RUN mkdir -p /usr/local/foglamp/plugins/south/Random
-COPY Random /usr/local/foglamp/plugins/south/Random
+COPY random_south /usr/local/foglamp/plugins/south/Random
+
+RUN mkdir -p /usr/local/foglamp/plugins/south/b100
+COPY b100_south /usr/local/foglamp/python/foglamp/plugins/south/b100
+
+RUN pip3 install -r /usr/local/foglamp/python/foglamp/plugins/south/b100/requirements.txt
 
 WORKDIR /usr/local/foglamp
 COPY foglamp.sh foglamp.sh
