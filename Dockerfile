@@ -1,7 +1,7 @@
 FROM schachr/raspbian-stretch
 #
 # FogLAMP on Raspberry PI 
-# TODO: Find an official Raspian Stretch image or build from scratch
+#
 
 # Install packages required for FogLAMP
 RUN apt-get update && apt-get install -y \
@@ -31,29 +31,37 @@ RUN apt-get update && apt-get install -y \
     rsyslog \
     sqlite3 \
     uuid-dev \
+    vim \
 && rm -rf /var/lib/apt/lists/*
 
+# Clone the FogLAMP git repository, select the 1.4.2 version, build, and install
 RUN git clone https://github.com/foglamp/FogLAMP.git /foglamp
-
 WORKDIR /foglamp
 RUN git checkout 1.4.2
 RUN make
 RUN make install
 
+# Install HTTP north plugin
 RUN mkdir -p /usr/local/foglamp/python/foglamp/plugins/north/http_north
 COPY http_north /usr/local/foglamp/python/foglamp/plugins/north/http_north
 
+# Install the random south plugin
 RUN mkdir -p /usr/local/foglamp/plugins/south/Random
 COPY random_south /usr/local/foglamp/plugins/south/Random
 
+# Install the B100 Modbus plugin
 RUN mkdir -p /usr/local/foglamp/plugins/south/b100
 COPY b100_south /usr/local/foglamp/python/foglamp/plugins/south/b100
 
 RUN pip3 install -r /usr/local/foglamp/python/foglamp/plugins/south/b100/requirements.txt
 
+# Copy the foglamp startup script and set owner and permissions
 WORKDIR /usr/local/foglamp
 COPY foglamp.sh foglamp.sh
+RUN chown root.staff /usr/local/foglamp/foglamp.sh
+RUN chmod 777 /usr/local/foglamp/foglamp.sh
 
+# Create foglamp data volume. This contains the configuration and needs to be preserved between restarts
 VOLUME /usr/local/foglamp/data
 
 # FogLAMP API port
