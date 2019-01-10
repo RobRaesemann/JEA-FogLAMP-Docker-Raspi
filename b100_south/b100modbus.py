@@ -5,7 +5,7 @@ from pymodbus.payload import BinaryPayloadDecoder
 
 modbus_client = None
 
-def convert_to_scaled_signedint(registers,scaling_value):
+def decode_and_scale_registers(registers, scaling_value):
     """ Converts unsigned int from Modbus device to a signed integer divided by the scaling_value """
     decoder = BinaryPayloadDecoder.fromRegisters(registers, byteorder=Endian.Big, wordorder=Endian.Little)
     number = decoder.decode_32bit_int()
@@ -24,18 +24,23 @@ def get_b100_readings(address, port):
     ltc_tank_temp = None
     top_oil_temp = None
 
+    LTC_TANK_TEMP_REG = 216
+    TOP_OIL_TEMP_REG = 268
+    UNIT = 1
+    NUM_REGISTERS_TO_READ = 2
+    SCALING_VALUE = 1000
+
     # read LTC Tank Temperature
     try:
-        ltc_tank_temp_reg = modbus_client.read_input_registers(216,2,unit=1)
-        val = ltc_tank_temp_reg.registers[0]
-        ltc_tank_temp = convert_to_scaled_signedint(val,1000)
-    except: 
+        ltc_tank_temp_read = modbus_client.read_input_registers(LTC_TANK_TEMP_REG,NUM_REGISTERS_TO_READ,unit=UNIT)
+        ltc_tank_temp = decode_and_scale_registers(ltc_tank_temp_read.registers, SCALING_VALUE)
+    except Exception as ex:
+        print(ex) 
         ltc_tank_temp = 'error'
 			
     try:
-        top_oil_temp_read = modbus_client.read_input_registers(268,2,unit=1)
-        top_oil_temp_raw = top_oil_temp_read.registers[0]
-        top_oil_temp = convert_to_scaled_signedint(top_oil_temp_raw,1000)
+        top_oil_temp_read = modbus_client.read_input_registers(TOP_OIL_TEMP_REG,NUM_REGISTERS_TO_READ,unit=UNIT)
+        top_oil_temp = decode_and_scale_registers(top_oil_temp_read.registers, SCALING_VALUE)
     except: 
         top_oil_temp = 'error'
 			

@@ -54,7 +54,7 @@ if __name__ == "__main__":
             top_oil_temp_read = client.read_input_registers(TOP_OIL_TEMP_REG,NUM_REGISTERS_TO_READ,unit=UNIT)
             top_oil_temp = decode_and_scale_registers(top_oil_temp_read.registers, SCALING_VALUE)
 
-            print(f'LTC Tank Temp: {ltc_tank_temp}\tTop Oil Temp: {top_oil_temp}')
+            print('LTC Tank Temp: {}\tTop Oil Temp: {}',(ltc_tank_temp, top_oil_temp))
             time.sleep(1)
         except Exception as ex:
             print(f'ERROR: {ex}')
