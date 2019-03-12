@@ -4,7 +4,7 @@ FROM schachr/raspbian-stretch
 #
 
 # Install packages required for FogLAMP
-RUN apt-get update && apt-get install -y \
+RUN apt-get update && apt-get upgrade -y  && apt-get install -y --no-install-recommends\
     apt-utils \
     autoconf \ 
     automake \
@@ -32,14 +32,19 @@ RUN apt-get update && apt-get install -y \
     sqlite3 \
     uuid-dev \
     vim \
+&& apt-get clean \
 && rm -rf /var/lib/apt/lists/*
 
-# Clone the FogLAMP git repository, select the 1.4.2 version, build, and install
-RUN git clone https://github.com/foglamp/FogLAMP.git /foglamp
+RUN mkdir -p /foglamp
 WORKDIR /foglamp
-RUN git checkout 1.4.2
-RUN make
-RUN make install
+
+# Clone the FogLAMP git repository, select the 1.4.2 version, build, and install
+RUN git clone https://github.com/foglamp/FogLAMP.git /foglamp \
+&& git checkout v1.5.0 \
+&& make \
+&& make install
+
+ENV FOGLAMP_ROOT=/usr/local/foglamp
 
 # Install HTTP north plugin
 RUN mkdir -p /usr/local/foglamp/python/foglamp/plugins/north/http_north
@@ -68,9 +73,9 @@ VOLUME /usr/local/foglamp/data
 EXPOSE 8081
 
 # start rsyslog, FogLAMP, and tail syslog
-CMD ["bash", "./foglamp.sh"]
+CMD ["bash", "usr/bin/foglamp/foglamp.sh"]
 
 LABEL maintainer="rob@raesemann.com" \
       author="Raesemann" \
       target="Raspberry PI" \
-      version="0.1-beta" \
+      version="1.5.0" \
