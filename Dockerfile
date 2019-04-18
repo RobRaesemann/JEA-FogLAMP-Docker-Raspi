@@ -38,11 +38,28 @@ RUN apt-get update && apt-get upgrade -y  && apt-get install -y --no-install-rec
 RUN mkdir -p /foglamp
 WORKDIR /foglamp
 
-# Clone the FogLAMP git repository, select the 1.4.2 version, build, and install
+# Clone the FogLAMP git repository, select version, build, and install
 RUN git clone https://github.com/foglamp/FogLAMP.git /foglamp \
-&& git checkout v1.5.0 \
+&& git checkout v1.5.1 \
 && make \
 && make install
+
+RUN mkdir -p /foglamp/notificaitons
+WORKDIR /foglamp/notifications
+RUN git clone https://github.com/foglamp/foglamp-service-notification.git /foglamp/notifications \
+&& cd build \
+&& cmake -DFOGLAMP_SRC=/foglamp -DFOGLAMP_INSTALL=/usr/local/foglamp ..  \
+&& make \
+&& make install
+
+RUN mkdir -p /foglamp/python-notify
+WORKDIR /foglamp/python-notify
+RUN git clone https://github.com/foglamp/foglamp-notify-python35.git /foglamp/python-notify \
+&& cd build \
+&& cmake -DFOGLAMP_SRC=/foglamp -DFOGLAMP_INSTALL=/usr/local/foglamp ..  \
+&& make \
+&& make install
+
 
 ENV FOGLAMP_ROOT=/usr/local/foglamp
 
@@ -70,12 +87,12 @@ RUN chmod 777 /usr/local/foglamp/foglamp.sh
 VOLUME /usr/local/foglamp/data
 
 # FogLAMP API port
-EXPOSE 8081
+EXPOSE 8081 80 1995
 
 # start rsyslog, FogLAMP, and tail syslog
-CMD ["bash", "usr/bin/foglamp/foglamp.sh"]
+CMD ["bash", "/usr/local/foglamp/foglamp.sh"]
 
 LABEL maintainer="rob@raesemann.com" \
       author="Raesemann" \
       target="Raspberry PI" \
-      version="1.5.0" \
+      version="1.5.1" \
